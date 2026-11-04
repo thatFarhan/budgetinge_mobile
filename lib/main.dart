@@ -1,6 +1,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import 'monthly_history_page.dart';
+
 void main() => runApp(const BudgetingeApp());
 
 // ---------------------------------------------------------------------------
@@ -33,9 +35,9 @@ class BudgetingeApp extends StatelessWidget {
           surface: AppColors.background,
         ),
         textTheme: ThemeData.light().textTheme.apply(
-              bodyColor: AppColors.primary,
-              displayColor: AppColors.primary,
-            ),
+          bodyColor: AppColors.primary,
+          displayColor: AppColors.primary,
+        ),
       ),
       home: const HomePage(),
     );
@@ -69,13 +71,33 @@ class Purchase {
 
 final List<Purchase> _purchases = [
   Purchase('Groceries', 1_200_000, DateTime(2026, 10, 26), Category.food),
-  Purchase('Monthly bus pass', 300_000, DateTime(2026, 10, 25), Category.transport),
-  Purchase('Running shoes', 1_300_000, DateTime(2026, 10, 23), Category.shopping),
+  Purchase(
+    'Monthly bus pass',
+    300_000,
+    DateTime(2026, 10, 25),
+    Category.transport,
+  ),
+  Purchase(
+    'Running shoes',
+    1_300_000,
+    DateTime(2026, 10, 23),
+    Category.shopping,
+  ),
   Purchase('Electricity bill', 200_000, DateTime(2026, 10, 21), Category.bills),
   Purchase('Cinema tickets', 60_000, DateTime(2026, 10, 19), Category.fun),
-  Purchase('Lunch with friends', 350_000, DateTime(2026, 10, 18), Category.food),
+  Purchase(
+    'Lunch with friends',
+    350_000,
+    DateTime(2026, 10, 18),
+    Category.food,
+  ),
   Purchase('Internet', 400_000, DateTime(2026, 10, 15), Category.bills),
-  Purchase('Ride to airport', 20_000, DateTime(2026, 10, 12), Category.transport),
+  Purchase(
+    'Ride to airport',
+    20_000,
+    DateTime(2026, 10, 12),
+    Category.transport,
+  ),
   Purchase('Backpack', 600_000, DateTime(2026, 10, 9), Category.shopping),
   Purchase('Coffee beans', 200_000, DateTime(2026, 10, 6), Category.food),
 ];
@@ -84,7 +106,7 @@ final List<Purchase> _purchases = [
 // Helpers
 // ---------------------------------------------------------------------------
 
-String _money(double value) {
+String money(double value) {
   final double number;
   final String suffix;
   if (value >= 1000000) {
@@ -97,24 +119,34 @@ String _money(double value) {
     number = value;
     suffix = '';
   }
- 
+
   // Up to one decimal for K and jt amounts, none for plain rupiah.
   var text = number.toStringAsFixed(suffix.isEmpty ? 0 : 1);
   if (text.endsWith('.0')) text = text.substring(0, text.length - 2);
- 
+
   final parts = text.split('.');
   final whole = parts[0].replaceAllMapped(
     RegExp(r'\B(?=(\d{3})+(?!\d))'),
     (_) => '.',
   );
   final decimal = parts.length > 1 ? ',${parts[1]}' : '';
- 
+
   return 'Rp$whole$decimal$suffix';
 }
 
 const _months = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
 ];
 
 String _shortDate(DateTime d) => '${d.day} ${_months[d.month - 1]}';
@@ -191,8 +223,7 @@ class _HomePageState extends State<HomePage> {
   // Donut chart with a live readout in the middle.
   Widget _buildChart() {
     final totals = _totals;
-    final touchedCategory =
-        _touched >= 0 ? Category.values[_touched] : null;
+    final touchedCategory = _touched >= 0 ? Category.values[_touched] : null;
 
     final centerLabel = touchedCategory?.label ?? 'Spent this month';
     final centerValue = touchedCategory != null
@@ -214,6 +245,14 @@ class _HomePageState extends State<HomePage> {
                 borderData: FlBorderData(show: false),
                 pieTouchData: PieTouchData(
                   touchCallback: (event, response) {
+                    if (event is FlTapUpEvent) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MonthlyHistoryPage(),
+                        ),
+                      );
+                    }
                     final index =
                         response?.touchedSection?.touchedSectionIndex ?? -1;
                     if (!event.isInterestedForInteractions || index < 0) {
@@ -244,7 +283,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _money(centerValue),
+                    money(centerValue),
                     style: const TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.w800,
@@ -278,14 +317,18 @@ class _HomePageState extends State<HomePage> {
                 Container(
                   width: 10,
                   height: 10,
-                  decoration:
-                      BoxDecoration(color: c.color, shape: BoxShape.circle),
+                  decoration: BoxDecoration(
+                    color: c.color,
+                    shape: BoxShape.circle,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   '${c.label} ${(totals[c]! / total * 100).round()}%',
                   style: const TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w600),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -345,8 +388,9 @@ class _PurchaseTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = purchase.category;
-    final iconColor =
-        c.color.computeLuminance() > 0.35 ? AppColors.primary : AppColors.background;
+    final iconColor = c.color.computeLuminance() > 0.35
+        ? AppColors.primary
+        : AppColors.background;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -368,7 +412,9 @@ class _PurchaseTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w600),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -380,7 +426,7 @@ class _PurchaseTile extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Text(
-            '-${_money(purchase.amount)}',
+            '-${money(purchase.amount)}',
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
           ),
         ],
