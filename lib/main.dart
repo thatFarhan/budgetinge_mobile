@@ -1,19 +1,16 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import 'addPurchasePage.dart';
+import 'models.dart';
+import 'theme.dart';
+import 'utils.dart';
+
 void main() => runApp(const BudgetingeApp());
 
 // ---------------------------------------------------------------------------
 // Theme
 // ---------------------------------------------------------------------------
-
-class AppColors {
-  static const background = Color(0xFFE8DCC4);
-  static const primary = Color(0xFF123F36);
-  static const secondary = Color(0xFFC49A45);
-  static final muted = primary.withValues(alpha: 0.62);
-  static final divider = primary.withValues(alpha: 0.14);
-}
 
 class BudgetingeApp extends StatelessWidget {
   const BudgetingeApp({super.key});
@@ -46,28 +43,7 @@ class BudgetingeApp extends StatelessWidget {
 // Placeholder data (UI showcase only)
 // ---------------------------------------------------------------------------
 
-enum Category {
-  food('Food', Color(0xFF123F36), Icons.restaurant_rounded),
-  transport('Transport', Color(0xFFC49A45), Icons.directions_bus_rounded),
-  shopping('Shopping', Color(0xFF6F9A8D), Icons.shopping_bag_rounded),
-  bills('Bills', Color(0xFF8A5A3B), Icons.receipt_long_rounded),
-  fun('Fun', Color(0xFFA9B58C), Icons.local_activity_rounded);
-
-  const Category(this.label, this.color, this.icon);
-  final String label;
-  final Color color;
-  final IconData icon;
-}
-
-class Purchase {
-  const Purchase(this.title, this.amount, this.date, this.category);
-  final String title;
-  final double amount;
-  final DateTime date;
-  final Category category;
-}
-
-final List<Purchase> _purchases = [
+final List<Purchase> _seedPurchases = [
   Purchase('Groceries', 1_200_000, DateTime(2026, 10, 26), Category.food),
   Purchase('Monthly bus pass', 300_000, DateTime(2026, 10, 25), Category.transport),
   Purchase('Running shoes', 1_300_000, DateTime(2026, 10, 23), Category.shopping),
@@ -81,45 +57,6 @@ final List<Purchase> _purchases = [
 ];
 
 // ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-String _money(double value) {
-  final double number;
-  final String suffix;
-  if (value >= 1000000) {
-    number = value / 1000000;
-    suffix = 'jt';
-  } else if (value >= 1000) {
-    number = value / 1000;
-    suffix = 'K';
-  } else {
-    number = value;
-    suffix = '';
-  }
- 
-  // Up to one decimal for K and jt amounts, none for plain rupiah.
-  var text = number.toStringAsFixed(suffix.isEmpty ? 0 : 1);
-  if (text.endsWith('.0')) text = text.substring(0, text.length - 2);
- 
-  final parts = text.split('.');
-  final whole = parts[0].replaceAllMapped(
-    RegExp(r'\B(?=(\d{3})+(?!\d))'),
-    (_) => '.',
-  );
-  final decimal = parts.length > 1 ? ',${parts[1]}' : '';
- 
-  return 'Rp$whole$decimal$suffix';
-}
-
-const _months = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-];
-
-String _shortDate(DateTime d) => '${d.day} ${_months[d.month - 1]}';
-
-// ---------------------------------------------------------------------------
 // Home page
 // ---------------------------------------------------------------------------
 
@@ -131,6 +68,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final List<Purchase> _purchases = List.of(_seedPurchases);
   int _touched = -1;
 
   Map<Category, double> get _totals {
@@ -143,13 +81,41 @@ class _HomePageState extends State<HomePage> {
 
   double get _grandTotal => _purchases.fold(0, (sum, p) => sum + p.amount);
 
+  Future<void> _openAddPurchase() async {
+    final result = await Navigator.of(context).push<Purchase>(
+      MaterialPageRoute(builder: (_) => const AddPurchasePage()),
+    );
+    if (result == null || !mounted) return;
+
+    setState(() {
+      _purchases.add(result);
+      _touched = -1;
+    });
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.primary,
+          content: Text(
+            '${result.title} added',
+            style: const TextStyle(
+              color: AppColors.background,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      );
+  }
+
   @override
   Widget build(BuildContext context) {
     final sorted = [..._purchases]..sort((a, b) => b.date.compareTo(a.date));
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
+        onPressed: _openAddPurchase,
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.secondary,
         icon: const Icon(Icons.add_rounded),
@@ -188,7 +154,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Donut chart with a live readout in the middle.
   Widget _buildChart() {
     final totals = _totals;
     final touchedCategory =
@@ -244,7 +209,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _money(centerValue),
+                    formatMoney(centerValue),
                     style: const TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.w800,
@@ -345,8 +310,6 @@ class _PurchaseTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = purchase.category;
-    final iconColor =
-        c.color.computeLuminance() > 0.35 ? AppColors.primary : AppColors.background;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -356,7 +319,7 @@ class _PurchaseTile extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(color: c.color, shape: BoxShape.circle),
-            child: Icon(c.icon, color: iconColor, size: 22),
+            child: Icon(c.icon, color: c.onColor, size: 22),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -372,7 +335,7 @@ class _PurchaseTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${c.label}, ${_shortDate(purchase.date)}',
+                  '${c.label}, ${formatShortDate(purchase.date)}',
                   style: TextStyle(fontSize: 13, color: AppColors.muted),
                 ),
               ],
@@ -380,7 +343,7 @@ class _PurchaseTile extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Text(
-            '-${_money(purchase.amount)}',
+            '-${formatMoney(purchase.amount)}',
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
           ),
         ],
