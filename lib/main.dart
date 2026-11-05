@@ -66,7 +66,7 @@ final List<Purchase> _seedPurchases = [
     DateTime(2026, 10, 18),
     Category.food,
   ),
-  Purchase('Internet', 400_000, DateTime(2026, 10, 15), Category.bills),
+  Purchase('Internet', 400_001, DateTime(2026, 10, 15), Category.bills),
   Purchase(
     'Ride to airport',
     20_000,
@@ -161,12 +161,15 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 112),
+              padding: const EdgeInsets.fromLTRB(0, 0, 0, 112),
               sliver: SliverList.separated(
                 itemCount: sorted.length,
-                separatorBuilder: (_, __) =>
+                separatorBuilder: (_, _) =>
                     Divider(height: 1, color: AppColors.divider),
-                itemBuilder: (_, i) => _PurchaseTile(purchase: sorted[i]),
+                itemBuilder: (_, i) => _PurchaseTile(
+                  purchase: sorted[i],
+                  onTap: () => _showDetails(sorted[i]),
+                ),
               ),
             ),
           ],
@@ -290,6 +293,94 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  void _showDetails(Purchase p) {
+    final c = p.category;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      backgroundColor: AppColors.background,
+      // Material 3 caps sheet width at 640; lift the cap for full width.
+      constraints: const BoxConstraints(maxWidth: double.infinity),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        p.title,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${p.category.label}, ${formatShortDate(p.date)}',
+                        style: TextStyle(color: AppColors.muted),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        formatMoneyFull(p.amount),
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    width: 66,
+                    height: 66,
+                    decoration: BoxDecoration(
+                      color: c.color,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(c.icon, color: c.onColor, size: 33),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              // Receipt area, 3:4 (width:height). Swap the child for the
+              // receipt image once it exists.
+              AspectRatio(
+                aspectRatio: 3 / 4,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.divider),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    'NO RECEIPT',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 2,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -336,51 +427,55 @@ class _Header extends StatelessWidget {
 }
 
 class _PurchaseTile extends StatelessWidget {
-  const _PurchaseTile({required this.purchase});
+  const _PurchaseTile({required this.purchase, this.onTap});
   final Purchase purchase;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final c = purchase.category;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(color: c.color, shape: BoxShape.circle),
-            child: Icon(c.icon, color: c.onColor, size: 22),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  purchase.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${c.label}, ${formatShortDate(purchase.date)}',
-                  style: TextStyle(fontSize: 13, color: AppColors.muted),
-                ),
-              ],
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 14, 24, 14),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(color: c.color, shape: BoxShape.circle),
+              child: Icon(c.icon, color: c.onColor, size: 22),
             ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            '-${formatMoney(purchase.amount)}',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-          ),
-        ],
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    purchase.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${c.label}, ${formatShortDate(purchase.date)}',
+                    style: TextStyle(fontSize: 13, color: AppColors.muted),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              '-${formatMoney(purchase.amount)}',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
       ),
     );
   }

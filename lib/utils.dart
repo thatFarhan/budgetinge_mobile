@@ -61,3 +61,11 @@ class RupiahInputFormatter extends TextInputFormatter {
     );
   }
 }
+
+String formatMoneyFull(double value) {
+  final whole = value.round().toString().replaceAllMapped(
+        RegExp(r'\B(?=(\d{3})+(?!\d))'),
+        (_) => '.',
+      );
+  return 'Rp$whole';
+}
