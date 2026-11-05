@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import 'monthly_history_page.dart';
 import 'addPurchasePage.dart';
 import 'models.dart';
 import 'theme.dart';
@@ -30,9 +31,9 @@ class BudgetingeApp extends StatelessWidget {
           surface: AppColors.background,
         ),
         textTheme: ThemeData.light().textTheme.apply(
-              bodyColor: AppColors.primary,
-              displayColor: AppColors.primary,
-            ),
+          bodyColor: AppColors.primary,
+          displayColor: AppColors.primary,
+        ),
       ),
       home: const HomePage(),
     );
@@ -45,13 +46,33 @@ class BudgetingeApp extends StatelessWidget {
 
 final List<Purchase> _seedPurchases = [
   Purchase('Groceries', 1_200_000, DateTime(2026, 10, 26), Category.food),
-  Purchase('Monthly bus pass', 300_000, DateTime(2026, 10, 25), Category.transport),
-  Purchase('Running shoes', 1_300_000, DateTime(2026, 10, 23), Category.shopping),
+  Purchase(
+    'Monthly bus pass',
+    300_000,
+    DateTime(2026, 10, 25),
+    Category.transport,
+  ),
+  Purchase(
+    'Running shoes',
+    1_300_000,
+    DateTime(2026, 10, 23),
+    Category.shopping,
+  ),
   Purchase('Electricity bill', 200_000, DateTime(2026, 10, 21), Category.bills),
   Purchase('Cinema tickets', 60_000, DateTime(2026, 10, 19), Category.fun),
-  Purchase('Lunch with friends', 350_000, DateTime(2026, 10, 18), Category.food),
+  Purchase(
+    'Lunch with friends',
+    350_000,
+    DateTime(2026, 10, 18),
+    Category.food,
+  ),
   Purchase('Internet', 400_000, DateTime(2026, 10, 15), Category.bills),
-  Purchase('Ride to airport', 20_000, DateTime(2026, 10, 12), Category.transport),
+  Purchase(
+    'Ride to airport',
+    20_000,
+    DateTime(2026, 10, 12),
+    Category.transport,
+  ),
   Purchase('Backpack', 600_000, DateTime(2026, 10, 9), Category.shopping),
   Purchase('Coffee beans', 200_000, DateTime(2026, 10, 6), Category.food),
 ];
@@ -156,8 +177,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildChart() {
     final totals = _totals;
-    final touchedCategory =
-        _touched >= 0 ? Category.values[_touched] : null;
+    final touchedCategory = _touched >= 0 ? Category.values[_touched] : null;
 
     final centerLabel = touchedCategory?.label ?? 'Spent this month';
     final centerValue = touchedCategory != null
@@ -179,6 +199,14 @@ class _HomePageState extends State<HomePage> {
                 borderData: FlBorderData(show: false),
                 pieTouchData: PieTouchData(
                   touchCallback: (event, response) {
+                    if (event is FlTapUpEvent) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MonthlyHistoryPage(),
+                        ),
+                      );
+                    }
                     final index =
                         response?.touchedSection?.touchedSectionIndex ?? -1;
                     if (!event.isInterestedForInteractions || index < 0) {
@@ -243,14 +271,18 @@ class _HomePageState extends State<HomePage> {
                 Container(
                   width: 10,
                   height: 10,
-                  decoration:
-                      BoxDecoration(color: c.color, shape: BoxShape.circle),
+                  decoration: BoxDecoration(
+                    color: c.color,
+                    shape: BoxShape.circle,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   '${c.label} ${(totals[c]! / total * 100).round()}%',
                   style: const TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w600),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -331,7 +363,9 @@ class _PurchaseTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w600),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
