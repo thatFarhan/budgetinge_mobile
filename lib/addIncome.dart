@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'main.dart' show AppColors; 
+import 'theme.dart';
 
 class IncomeSettings {
   const IncomeSettings({required this.monthlyIncome, required this.payday});

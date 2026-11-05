@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'main.dart';
+import 'models.dart';
+import 'theme.dart';
+import 'utils.dart';
 
 class MonthlyHistoryPage extends StatefulWidget {
   const MonthlyHistoryPage({super.key});
@@ -114,7 +116,7 @@ class _MonthlyHistoryPageState extends State<MonthlyHistoryPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    money(spent.toDouble()),
+                    formatMoney(spent.toDouble()),
                     style: const TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.w800,
@@ -136,8 +138,8 @@ class _MonthlyHistoryPageState extends State<MonthlyHistoryPage> {
                   const SizedBox(height: 10),
                   Text(
                     left < 0
-                        ? 'Over budget by ${money(-left.toDouble())}'
-                        : '${money(left.toDouble())} left of ${money(budget.toDouble())}',
+                        ? 'Over budget by ${formatMoney(-left.toDouble())}'
+                        : '${formatMoney(left.toDouble())} left of ${formatMoney(budget.toDouble())}',
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -227,7 +229,7 @@ class _CategoryRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${money(spent.toDouble())} / ${money(limit.toDouble())}',
+                  '${formatMoney(spent.toDouble())} / ${formatMoney(limit.toDouble())}',
                   style: TextStyle(fontSize: 13, color: AppColors.muted),
                 ),
               ],
