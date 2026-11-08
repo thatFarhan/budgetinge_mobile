@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'monthly_history_page.dart';
 import 'addPurchasePage.dart';
+import 'addIncome.dart'; // <-- BARU
 import 'models.dart';
 import 'theme.dart';
 import 'utils.dart';
@@ -92,6 +93,18 @@ class _HomePageState extends State<HomePage> {
   final List<Purchase> _purchases = List.of(_seedPurchases);
   int _touched = -1;
 
+  // ===== BARU: data income (null = belum diisi) =====
+  IncomeSettings? _income;
+
+  // ===== BARU: buka halaman income, simpan hasilnya =====
+  Future<void> _openIncomeSetup() async {
+    final result = await Navigator.of(context).push<IncomeSettings>(
+      MaterialPageRoute(builder: (_) => IncomeSetupPage(initial: _income)),
+    );
+    if (result == null || !mounted) return;
+    setState(() => _income = result);
+  }
+
   Map<Category, double> get _totals {
     final map = <Category, double>{for (final c in Category.values) c: 0};
     for (final p in _purchases) {
@@ -148,7 +161,7 @@ class _HomePageState extends State<HomePage> {
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
-            SliverToBoxAdapter(child: _Header()),
+            SliverToBoxAdapter(child: _Header(onIncomeTap: _openIncomeSetup)), // <-- DIUBAH
             SliverToBoxAdapter(child: _buildChart()),
             SliverToBoxAdapter(child: _buildLegend()),
             const SliverToBoxAdapter(
@@ -388,6 +401,10 @@ class _HomePageState extends State<HomePage> {
 // ---------------------------------------------------------------------------
 
 class _Header extends StatelessWidget {
+  // ===== BARU: callback saat ikon income ditekan =====
+  const _Header({required this.onIncomeTap});
+  final VoidCallback onIncomeTap;
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -418,6 +435,17 @@ class _Header extends StatelessWidget {
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
+            ),
+          ),
+          // ===== BARU: ikon menuju halaman income =====
+          const SizedBox(width: 8),
+          IconButton.filled(
+            onPressed: onIncomeTap,
+            tooltip: 'Monthly income',
+            icon: const Icon(Icons.account_balance_wallet_rounded),
+            style: IconButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.secondary,
             ),
           ),
         ],
