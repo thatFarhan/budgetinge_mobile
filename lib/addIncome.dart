@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'theme.dart';
+import 'extra_budget_page.dart';
+
 
 class IncomeSettings {
   const IncomeSettings({required this.monthlyIncome, required this.payday});
@@ -139,6 +141,27 @@ class _IncomeSetupPageState extends State<IncomeSetupPage> {
                   child: Text('In shorter months, payday falls on the last day.',
                       style: TextStyle(fontSize: 12, color: AppColors.muted)),
                 ),
+                const SizedBox(height: 32),
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const ExtraBudgetPage()),
+                  );
+                },
+                icon: const Icon(Icons.add_rounded),
+                label: const Text(
+                  'Add budget for this month',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  side: BorderSide(color: AppColors.divider),
+                  minimumSize: const Size.fromHeight(52),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(26),
+                  ),
+                ),
+              ),
             ]),
           ),
           Padding(
